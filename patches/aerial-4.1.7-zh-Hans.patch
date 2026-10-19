@@ -1,0 +1,778 @@
+diff --git a/Aerial.xcodeproj/project.pbxproj b/Aerial.xcodeproj/project.pbxproj
+index 5a23dc2..410207d 100644
+--- a/Aerial.xcodeproj/project.pbxproj
++++ b/Aerial.xcodeproj/project.pbxproj
+@@ -2273,7 +2273,7 @@
+ 					"@executable_path/../Frameworks",
+ 				);
+ 				MACOSX_DEPLOYMENT_TARGET = 26.0;
+-				MARKETING_VERSION = 4.1.6;
++				MARKETING_VERSION = 4.1.7;
+ 				PRODUCT_BUNDLE_IDENTIFIER = "com.glouel.Aerial-App";
+ 				PRODUCT_NAME = "$(TARGET_NAME)";
+ 				PROVISIONING_PROFILE_SPECIFIER = "";
+@@ -2304,7 +2304,7 @@
+ 					"@executable_path/../Frameworks",
+ 				);
+ 				MACOSX_DEPLOYMENT_TARGET = 26.0;
+-				MARKETING_VERSION = 4.1.6;
++				MARKETING_VERSION = 4.1.7;
+ 				PRODUCT_BUNDLE_IDENTIFIER = "com.glouel.Aerial-App";
+ 				PRODUCT_NAME = "$(TARGET_NAME)";
+ 				PROVISIONING_PROFILE_SPECIFIER = "";
+@@ -2371,7 +2371,7 @@
+ 					"@executable_path/../../../../Frameworks",
+ 				);
+ 				MACOSX_DEPLOYMENT_TARGET = 26.0;
+-				MARKETING_VERSION = 4.1.6;
++				MARKETING_VERSION = 4.1.7;
+ 				PRODUCT_BUNDLE_IDENTIFIER = "com.glouel.Aerial-App.Aerial4WallpaperExtension";
+ 				PRODUCT_NAME = "$(TARGET_NAME)";
+ 				SKIP_INSTALL = YES;
+@@ -2405,7 +2405,7 @@
+ 					"@executable_path/../../../../Frameworks",
+ 				);
+ 				MACOSX_DEPLOYMENT_TARGET = 26.0;
+-				MARKETING_VERSION = 4.1.6;
++				MARKETING_VERSION = 4.1.7;
+ 				PRODUCT_BUNDLE_IDENTIFIER = "com.glouel.Aerial-App.Aerial4WallpaperExtension";
+ 				PRODUCT_NAME = "$(TARGET_NAME)";
+ 				SKIP_INSTALL = YES;
+diff --git a/Aerial/App/AppPresentationController.swift b/Aerial/App/AppPresentationController.swift
+index d4a7f98..fea8690 100644
+--- a/Aerial/App/AppPresentationController.swift
++++ b/Aerial/App/AppPresentationController.swift
+@@ -378,18 +378,12 @@ final class AppPresentationController: NSObject {
+         }
+ 
+         let alert = NSAlert()
+-        alert.messageText = "Quit Aerial?"
+-        alert.informativeText = """
+-            Your wallpaper and screensaver keep running — they live in a macOS extension, not in this app.
+-
+-            Quitting Aerial stops what the app itself takes care of in the background: video downloads, automatic pause when windows cover the wallpaper, live overlay data (weather, now playing) and keyboard shortcuts.
+-
+-            You can close the window instead and keep Aerial running in the Dock.
+-            """
+-        alert.addButton(withTitle: "Quit")
+-        alert.addButton(withTitle: "Close Window Instead")
++        alert.messageText = String(localized: "Quit Aerial?")
++        alert.informativeText = String(localized: "Your wallpaper and screensaver keep running — they live in a macOS extension, not in this app.\n\nQuitting Aerial stops what the app itself takes care of in the background: video downloads, automatic pause when windows cover the wallpaper, live overlay data (weather, now playing) and keyboard shortcuts.\n\nYou can close the window instead and keep Aerial running in the Dock.")
++        alert.addButton(withTitle: String(localized: "Quit"))
++        alert.addButton(withTitle: String(localized: "Close Window Instead"))
+         alert.showsSuppressionButton = true
+-        alert.suppressionButton?.title = "Don't ask again"
++        alert.suppressionButton?.title = String(localized: "Don't ask again")
+         alert.suppressionButton?.state = .on
+         NSApp.activate(ignoringOtherApps: true)
+         let response = alert.runModal()
+@@ -418,7 +412,8 @@ final class AppPresentationController: NSObject {
+         let paused = MainActor.assumeIsolated { PlaybackManager.shared.isPaused }
+ 
+         func item(_ title: String, _ action: Selector, enabled: Bool = true) -> NSMenuItem {
+-            let item = NSMenuItem(title: title, action: action, keyEquivalent: "")
++            let localizedTitle = Bundle.main.localizedString(forKey: title, value: title, table: nil)
++            let item = NSMenuItem(title: localizedTitle, action: action, keyEquivalent: "")
+             item.target = self
+             item.isEnabled = enabled
+             return item
+diff --git a/Aerial/Model/Helpers/UnifiedPaths.swift b/Aerial/Model/Helpers/UnifiedPaths.swift
+index d735e22..309f64a 100644
+--- a/Aerial/Model/Helpers/UnifiedPaths.swift
++++ b/Aerial/Model/Helpers/UnifiedPaths.swift
+@@ -143,18 +143,11 @@ struct UnifiedPaths {
+     private static func showRenameNotification(newPath: String) {
+         DispatchQueue.main.async {
+             let alert = NSAlert()
+-            alert.messageText = "Existing Folder Renamed"
+-            alert.informativeText = """
+-            We found an existing /Users/Shared/Aerial/ folder that wasn't created by Aerial.
+-
+-            To preserve your data, we've renamed it to:
+-            \(newPath)
+-
+-            Aerial will now use /Users/Shared/Aerial/ for its data.
+-            """
++            alert.messageText = String(localized: "Existing Folder Renamed")
++            alert.informativeText = String(localized: "We found an existing /Users/Shared/Aerial/ folder that wasn't created by Aerial.\n\nTo preserve your data, we've renamed it to:\n\(newPath)\n\nAerial will now use /Users/Shared/Aerial/ for its data.")
+             alert.alertStyle = .informational
+             alert.icon = NSImage(named: NSImage.infoName)
+-            alert.addButton(withTitle: "OK")
++            alert.addButton(withTitle: String(localized: "OK"))
+             alert.runModal()
+         }
+     }
+diff --git a/Aerial/UI/FirstLaunch/FirstLaunchCard.swift b/Aerial/UI/FirstLaunch/FirstLaunchCard.swift
+index 76bd92e..9e2c245 100644
+--- a/Aerial/UI/FirstLaunch/FirstLaunchCard.swift
++++ b/Aerial/UI/FirstLaunch/FirstLaunchCard.swift
+@@ -33,10 +33,10 @@ struct FirstLaunchCard: View {
+                 .frame(height: 96)
+ 
+                 VStack(alignment: .leading, spacing: 4) {
+-                    Text(title)
++                    Text(LocalizedStringKey(title))
+                         .font(.system(size: 14, weight: .semibold))
+                         .foregroundColor(.primary)
+-                    Text(tagline)
++                    Text(LocalizedStringKey(tagline))
+                         .font(.system(size: 12))
+                         .foregroundColor(.secondary)
+                         .multilineTextAlignment(.leading)
+diff --git a/Aerial/UI/FirstLaunch/PathMigrationView.swift b/Aerial/UI/FirstLaunch/PathMigrationView.swift
+index 21adc4b..4fa3bca 100644
+--- a/Aerial/UI/FirstLaunch/PathMigrationView.swift
++++ b/Aerial/UI/FirstLaunch/PathMigrationView.swift
+@@ -157,11 +157,11 @@ struct PathMigrationView: View {
+ 
+     private func confirmStartFresh() {
+         let alert = NSAlert()
+-        alert.messageText = "Start Fresh?"
+-        alert.informativeText = "Your existing data will remain in the old location but won't be used. You can delete it manually later if desired."
++        alert.messageText = String(localized: "Start Fresh?")
++        alert.informativeText = String(localized: "Your existing data will remain in the old location but won't be used. You can delete it manually later if desired.")
+         alert.alertStyle = .informational
+-        alert.addButton(withTitle: "Start Fresh")
+-        alert.addButton(withTitle: "Cancel")
++        alert.addButton(withTitle: String(localized: "Start Fresh"))
++        alert.addButton(withTitle: String(localized: "Cancel"))
+ 
+         if alert.runModal() == .alertFirstButtonReturn {
+             startMigration(type: .startFresh)
+diff --git a/Aerial/UI/Popover/ModeSectionView.swift b/Aerial/UI/Popover/ModeSectionView.swift
+index 2bb0443..225cc79 100644
+--- a/Aerial/UI/Popover/ModeSectionView.swift
++++ b/Aerial/UI/Popover/ModeSectionView.swift
+@@ -91,7 +91,7 @@ struct ModeSectionView: View {
+         VStack(spacing: 4) {
+             Image(systemName: (isActive && stopWhenActive) ? "stop.fill" : icon)
+                 .font(.system(size: 20, weight: .semibold))
+-            Text(title)
++            Text(LocalizedStringKey(title))
+                 .font(.body)
+         }
+         .foregroundColor(.aerial)
+diff --git a/Aerial/UI/Settings/Panels/AdvancedSettingsPanel.swift b/Aerial/UI/Settings/Panels/AdvancedSettingsPanel.swift
+index 70a934f..185078c 100644
+--- a/Aerial/UI/Settings/Panels/AdvancedSettingsPanel.swift
++++ b/Aerial/UI/Settings/Panels/AdvancedSettingsPanel.swift
+@@ -171,7 +171,7 @@ struct AdvancedSettingsPanel: View {
+                             Spacer()
+                             Picker("", selection: $transitionStyle) {
+                                 ForEach(WallpaperTransitionStyle.allCases, id: \.self) { style in
+-                                    Text(style.displayName).tag(style)
++                                    Text(LocalizedStringKey(style.displayName)).tag(style)
+                                 }
+                             }
+                             .pickerStyle(.menu)
+@@ -188,7 +188,7 @@ struct AdvancedSettingsPanel: View {
+                                 Spacer()
+                                 Picker("", selection: $transitionDuration) {
+                                     ForEach(transitionDurations, id: \.seconds) { option in
+-                                        Text(option.label).tag(option.seconds)
++                                        Text(LocalizedStringKey(option.label)).tag(option.seconds)
+                                     }
+                                 }
+                                 .pickerStyle(.menu)
+@@ -254,7 +254,7 @@ struct AdvancedSettingsPanel: View {
+                             Spacer()
+                             Picker("", selection: $onBatteryMode) {
+                                 ForEach(0..<onBatteryLabels.count, id: \.self) { index in
+-                                    Text(onBatteryLabels[index]).tag(index)
++                                    Text(LocalizedStringKey(onBatteryLabels[index])).tag(index)
+                                 }
+                             }
+                             .pickerStyle(.menu)
+diff --git a/Aerial/UI/Settings/Panels/Aerial4WallpaperPanel.swift b/Aerial/UI/Settings/Panels/Aerial4WallpaperPanel.swift
+index 1b55a91..15765c8 100644
+--- a/Aerial/UI/Settings/Panels/Aerial4WallpaperPanel.swift
++++ b/Aerial/UI/Settings/Panels/Aerial4WallpaperPanel.swift
+@@ -96,7 +96,7 @@ struct Aerial4WallpaperPanel: View {
+                 .controlSize(.large)
+                 .keyboardShortcut(" ", modifiers: [])
+ 
+-                Text(paused ? "Wallpaper is paused" : "Wallpaper is playing")
++                Text(LocalizedStringKey(paused ? "Wallpaper is paused" : "Wallpaper is playing"))
+                     .font(.system(size: 12))
+                     .foregroundColor(.secondary)
+             }
+diff --git a/Aerial/UI/Settings/Panels/AutoUpdatesPanel.swift b/Aerial/UI/Settings/Panels/AutoUpdatesPanel.swift
+index 2e51a46..743e0c4 100644
+--- a/Aerial/UI/Settings/Panels/AutoUpdatesPanel.swift
++++ b/Aerial/UI/Settings/Panels/AutoUpdatesPanel.swift
+@@ -70,7 +70,7 @@ struct AutoUpdatesPanel: View {
+                             Spacer()
+                             Picker("", selection: $checkFrequency) {
+                                 ForEach(UpdateCheckFrequency.allCases, id: \.self) { freq in
+-                                    Text(freq.rawValue).tag(freq)
++                                    Text(LocalizedStringKey(freq.rawValue)).tag(freq)
+                                 }
+                             }
+                             .pickerStyle(.segmented)
+@@ -90,7 +90,7 @@ struct AutoUpdatesPanel: View {
+                             Spacer()
+                             Picker("", selection: $autoInstallMode) {
+                                 ForEach(AutoInstallMode.allCases, id: \.self) { mode in
+-                                    Text(mode.rawValue).tag(mode)
++                                    Text(LocalizedStringKey(mode.rawValue)).tag(mode)
+                                 }
+                             }
+                             .pickerStyle(.segmented)
+@@ -146,7 +146,7 @@ struct AutoUpdatesPanel: View {
+                             Text("Channel")
+                                 .font(.system(size: 13))
+                             Spacer()
+-                            Text(betaUpdates ? "Beta" : "Stable")
++                            Text(LocalizedStringKey(betaUpdates ? "Beta" : "Stable"))
+                                 .font(.system(size: 13, weight: .medium))
+                                 .foregroundColor(betaUpdates ? .orange : .secondary)
+                         }
+diff --git a/Aerial/UI/Settings/Panels/CacheSettingsPanel.swift b/Aerial/UI/Settings/Panels/CacheSettingsPanel.swift
+index 06b9e59..ab5c2c1 100644
+--- a/Aerial/UI/Settings/Panels/CacheSettingsPanel.swift
++++ b/Aerial/UI/Settings/Panels/CacheSettingsPanel.swift
+@@ -219,10 +219,10 @@ struct CacheSettingsPanel: View {
+             }.value
+             let alert = NSAlert()
+             guard !plan.isEmpty else {
+-                alert.messageText = "Nothing to trim"
+-                alert.informativeText = "Every cached video is either a favourite or playing right now, so the cache can't be trimmed any further."
++                alert.messageText = String(localized: "Nothing to trim")
++                alert.informativeText = String(localized: "Every cached video is either a favourite or playing right now, so the cache can't be trimmed any further.")
+                 alert.alertStyle = .informational
+-                alert.addButton(withTitle: "OK")
++                alert.addButton(withTitle: String(localized: "OK"))
+                 alert.runModal()
+                 return
+             }
+@@ -233,7 +233,7 @@ struct CacheSettingsPanel: View {
+             alert.informativeText = "This will delete \(count) video\(plural) (\(gigabytes) GB), oldest first. Favourites and the videos playing right now are kept. Deleted videos can be downloaded again later."
+             alert.alertStyle = .warning
+             alert.addButton(withTitle: "Delete \(count) Video\(plural)").hasDestructiveAction = true
+-            alert.addButton(withTitle: "Cancel")
++            alert.addButton(withTitle: String(localized: "Cancel"))
+             guard alert.runModal() == .alertFirstButtonReturn else { return }
+ 
+             isTrimming = true
+@@ -401,8 +401,8 @@ struct CacheSettingsPanel: View {
+         if resolved == mountPoint || resolved.hasPrefix(mountPoint + "/") {
+             // Aerial's own plumbing, not a user location.
+             let alert = NSAlert()
+-            alert.messageText = "Please choose a different folder"
+-            alert.informativeText = "This folder is the mount point Aerial uses for the external cache image. Choose the folder that should hold the cache instead."
++            alert.messageText = String(localized: "Please choose a different folder")
++            alert.informativeText = String(localized: "This folder is the mount point Aerial uses for the external cache image. Choose the folder that should hold the cache instead.")
+             alert.alertStyle = .warning
+             alert.runModal()
+             return
+@@ -421,7 +421,7 @@ struct CacheSettingsPanel: View {
+         if wantsImage, let problem = ExternalCacheImage.imageHostingProblem(folder: resolved) {
+             errorLog("💽 rejected cache folder \(resolved): \(problem)")
+             let alert = NSAlert()
+-            alert.messageText = "This folder can't hold the cache image"
++            alert.messageText = String(localized: "This folder can't hold the cache image")
+             alert.informativeText = problem
+             alert.alertStyle = .warning
+             alert.runModal()
+@@ -438,10 +438,10 @@ struct CacheSettingsPanel: View {
+            resolved == URL(fileURLWithPath: legacy).resolvingSymlinksInPath().path {
+             let inventory = LegacyExternalCacheMigration.inventory(folder: legacy)
+             let alert = NSAlert()
+-            alert.messageText = "Move the videos in this folder into a disk image?"
++            alert.messageText = String(localized: "Move the videos in this folder into a disk image?")
+             alert.informativeText = "Aerial keeps caches outside /Users/Shared in a disk image (\(ExternalCacheImage.bundleName)) so the wallpaper extension can play them. The image is created inside this folder and the \(inventory.count) video\(inventory.count == 1 ? "" : "s") in it (\(inventory.formattedBytes)), plus any Expansion packs, are moved in. Nothing is deleted."
+-            alert.addButton(withTitle: "Convert")
+-            alert.addButton(withTitle: "Cancel")
++            alert.addButton(withTitle: String(localized: "Convert"))
++            alert.addButton(withTitle: String(localized: "Cancel"))
+             alert.alertStyle = .informational
+             guard alert.runModal() == .alertFirstButtonReturn else { return }
+             applyExternalCache(folder: legacy, migrateFrom: nil)
+@@ -456,7 +456,7 @@ struct CacheSettingsPanel: View {
+         let canMigrate = Cache.isExternalImageMode ? (!wantsImage && Cache.isAvailable) : true
+ 
+         let alert = NSAlert()
+-        alert.messageText = "Change cache location?"
++        alert.messageText = String(localized: "Change cache location?")
+         let packsNote = PrefsCache.expansionsAtCacheLocation
+             ? " Expansion packs stored at the cache location move along with the videos."
+             : ""
+@@ -469,10 +469,10 @@ struct CacheSettingsPanel: View {
+             alert.informativeText = "What would you like to do with videos in the current cache folder?\(packsNote)"
+         }
+         if canMigrate {
+-            alert.addButton(withTitle: "Move existing videos")
++            alert.addButton(withTitle: String(localized: "Move existing videos"))
+         }
+-        alert.addButton(withTitle: "Start fresh (keep old)")
+-        alert.addButton(withTitle: "Cancel")
++        alert.addButton(withTitle: String(localized: "Start fresh (keep old)"))
++        alert.addButton(withTitle: String(localized: "Cancel"))
+         alert.alertStyle = .informational
+ 
+         let response = alert.runModal()
+@@ -807,10 +807,10 @@ struct CacheSettingsPanel: View {
+             ? " and \(packs) Expansion pack\(packs == 1 ? "" : "s") to \(Cache.defaultSourcesRoot)"
+             : ""
+         let alert = NSAlert()
+-        alert.messageText = "Move the videos in this folder to the default location?"
++        alert.messageText = String(localized: "Move the videos in this folder to the default location?")
+         alert.informativeText = "Aerial moves the \(videos) in it to \(Cache.defaultCachePath)\(packsText), where the wallpaper extension can play them, and switches the custom cache location off. Same disk, so the move takes seconds. Nothing is deleted."
+-        alert.addButton(withTitle: "Move")
+-        alert.addButton(withTitle: "Cancel")
++        alert.addButton(withTitle: String(localized: "Move"))
++        alert.addButton(withTitle: String(localized: "Cancel"))
+         alert.alertStyle = .informational
+         guard alert.runModal() == .alertFirstButtonReturn else { return }
+ 
+diff --git a/Aerial/UI/Settings/Panels/DesktopSettingsPanel.swift b/Aerial/UI/Settings/Panels/DesktopSettingsPanel.swift
+index 1b33923..2e6f5c8 100644
+--- a/Aerial/UI/Settings/Panels/DesktopSettingsPanel.swift
++++ b/Aerial/UI/Settings/Panels/DesktopSettingsPanel.swift
+@@ -135,7 +135,7 @@ struct DesktopSettingsPanel: View {
+                         Spacer()
+                         Picker("", selection: $autoAdvanceMinutes) {
+                             ForEach(autoAdvanceIntervals, id: \.minutes) { option in
+-                                Text(option.label).tag(option.minutes)
++                                Text(LocalizedStringKey(option.label)).tag(option.minutes)
+                             }
+                         }
+                         .pickerStyle(.menu)
+@@ -242,7 +242,7 @@ struct DesktopSettingsPanel: View {
+                                         .foregroundColor(.secondary)
+                                         .frame(width: 32, alignment: .trailing)
+                                     if screen.coverage >= autoPauseThreshold {
+-                                        Text(isShared ? "would pause all" : "would pause")
++                                        Text(LocalizedStringKey(isShared ? "would pause all" : "would pause"))
+                                             .font(.system(size: 11, weight: .medium))
+                                             .foregroundColor(.orange)
+                                     } else if isShared && anyWouldPause {
+diff --git a/Aerial/UI/Settings/Panels/DisplaysSettingsPanel.swift b/Aerial/UI/Settings/Panels/DisplaysSettingsPanel.swift
+index c0ea695..78d7686 100644
+--- a/Aerial/UI/Settings/Panels/DisplaysSettingsPanel.swift
++++ b/Aerial/UI/Settings/Panels/DisplaysSettingsPanel.swift
+@@ -255,7 +255,7 @@ struct DisplaysSettingsPanel: View {
+ 
+                     ForEach(advancedMarginRows) { row in
+                         HStack(spacing: 8) {
+-                            Text(row.name + (row.isMain ? " (main)" : ""))
++                            Text(row.name + (row.isMain ? String(localized: " (main)") : ""))
+                                 .font(.system(size: 13))
+                                 .lineLimit(1)
+                             Spacer()
+diff --git a/Aerial/UI/Settings/Panels/OverlaysSettingsPanel.swift b/Aerial/UI/Settings/Panels/OverlaysSettingsPanel.swift
+index 69f5f3e..fa67d84 100644
+--- a/Aerial/UI/Settings/Panels/OverlaysSettingsPanel.swift
++++ b/Aerial/UI/Settings/Panels/OverlaysSettingsPanel.swift
+@@ -130,7 +130,7 @@ struct OverlaysSettingsPanel: View {
+ 
+                     Picker("Rotate overlays", selection: $rotationMode) {
+                         ForEach(OverlayRotationMode.allCases) { mode in
+-                            Text(mode.displayName).tag(mode)
++                            Text(LocalizedStringKey(mode.displayName)).tag(mode)
+                         }
+                     }
+                     .onChange(of: rotationMode) { _, newValue in
+diff --git a/Aerial/UI/Settings/Panels/ScreensaverTimelineView.swift b/Aerial/UI/Settings/Panels/ScreensaverTimelineView.swift
+index 0eac641..0dd8ed8 100644
+--- a/Aerial/UI/Settings/Panels/ScreensaverTimelineView.swift
++++ b/Aerial/UI/Settings/Panels/ScreensaverTimelineView.swift
+@@ -236,7 +236,7 @@ struct ScreensaverTimelineView: View {
+             RoundedRectangle(cornerRadius: 3)
+                 .fill(color)
+                 .frame(width: 12, height: 12)
+-            Text(label)
++            Text(LocalizedStringKey(label))
+                 .foregroundColor(.secondary)
+         }
+     }
+diff --git a/Aerial/UI/Settings/Panels/TimeSettingsPanel.swift b/Aerial/UI/Settings/Panels/TimeSettingsPanel.swift
+index 653b316..9c5936f 100644
+--- a/Aerial/UI/Settings/Panels/TimeSettingsPanel.swift
++++ b/Aerial/UI/Settings/Panels/TimeSettingsPanel.swift
+@@ -151,7 +151,7 @@ struct TimeSettingsPanel: View {
+                             Spacer()
+                             Picker("", selection: $sunEventWindow) {
+                                 ForEach(sunEventWindowOptions, id: \.value) { option in
+-                                    Text(option.label).tag(option.value)
++                                    Text(LocalizedStringKey(option.label)).tag(option.value)
+                                 }
+                             }
+                             .pickerStyle(.menu)
+@@ -190,7 +190,7 @@ struct TimeSettingsPanel: View {
+                                 Spacer()
+                                 Picker("", selection: $solarMode) {
+                                     ForEach(solarModeOptions, id: \.value) { option in
+-                                        Text(option.label).tag(option.value)
++                                        Text(LocalizedStringKey(option.label)).tag(option.value)
+                                     }
+                                 }
+                                 .pickerStyle(.menu)
+@@ -364,7 +364,7 @@ struct TimeSettingsPanel: View {
+                 Image(systemName: icon)
+                     .foregroundColor(disabled ? .secondary.opacity(0.5) : .secondary)
+                     .frame(width: 20)
+-                Text(label)
++                Text(LocalizedStringKey(label))
+                     .font(.system(size: 14))
+                     .foregroundColor(disabled ? .secondary : .primary)
+             }
+@@ -552,7 +552,7 @@ struct TimeBarView: View {
+             RoundedRectangle(cornerRadius: 3)
+                 .fill(color)
+                 .frame(width: 12, height: 12)
+-            Text(label)
++            Text(LocalizedStringKey(label))
+                 .foregroundColor(.secondary)
+         }
+     }
+diff --git a/Aerial/UI/Settings/SettingsView.swift b/Aerial/UI/Settings/SettingsView.swift
+index 3035f50..e114ea3 100644
+--- a/Aerial/UI/Settings/SettingsView.swift
++++ b/Aerial/UI/Settings/SettingsView.swift
+@@ -95,10 +95,10 @@ struct SettingsNavItem: View {
+                 .frame(width: 32, height: 32)
+ 
+             VStack(alignment: .leading, spacing: 2) {
+-                Text(panel.title)
++                Text(LocalizedStringKey(panel.title))
+                     .font(.system(size: 14, weight: .medium))
+ 
+-                Text(panel.description)
++                Text(LocalizedStringKey(panel.description))
+                     .font(.system(size: 11))
+                     .foregroundColor(.secondary)
+             }
+diff --git a/Aerial/UI/VideoBrowser/ActivityContentView.swift b/Aerial/UI/VideoBrowser/ActivityContentView.swift
+index 1442b52..b34f9a4 100644
+--- a/Aerial/UI/VideoBrowser/ActivityContentView.swift
++++ b/Aerial/UI/VideoBrowser/ActivityContentView.swift
+@@ -88,8 +88,8 @@ struct ActivityContentView: View {
+             VStack(alignment: .leading, spacing: 16) {
+                 ContentHeader(
+                     icon: "clock.arrow.circlepath",
+-                    title: "Activity",
+-                    description: "Recently downloaded videos, newest first. Grouped by when they landed in your cache."
++                    title: String(localized: "Activity"),
++                    description: String(localized: "Recently downloaded videos, newest first. Grouped by when they landed in your cache.")
+                 ) {
+                     EmptyView()
+                 }
+diff --git a/Aerial/UI/VideoBrowser/Dashboard/DashboardModel.swift b/Aerial/UI/VideoBrowser/Dashboard/DashboardModel.swift
+index 1226936..63b4aac 100644
+--- a/Aerial/UI/VideoBrowser/Dashboard/DashboardModel.swift
++++ b/Aerial/UI/VideoBrowser/Dashboard/DashboardModel.swift
+@@ -112,22 +112,22 @@ final class DashboardModel: ObservableObject {
+ 
+     func timeModeName() -> String {
+         switch PrefsTime.timeMode {
+-        case .disabled:        return "Disabled"
+-        case .nightShift:      return "Night Shift"
+-        case .manual:          return "Manual"
+-        case .lightDarkMode:   return "Light/Dark Mode"
+-        case .coordinates:     return "Coordinates"
+-        case .locationService: return "Location Service"
++        case .disabled:        return String(localized: "Disabled")
++        case .nightShift:      return String(localized: "Night Shift")
++        case .manual:          return String(localized: "Manual")
++        case .lightDarkMode:   return String(localized: "Light/Dark Mode")
++        case .coordinates:     return String(localized: "Coordinates")
++        case .locationService: return String(localized: "Location Service")
+         }
+     }
+ 
+     /// Human-readable explanation of a viewing mode, for the header.
+     func modeDescription(_ mode: ViewingMode) -> String {
+         switch mode {
+-        case .independent: return "Each display plays its own video — set per display below."
+-        case .cloned:      return "All displays show the same video."
+-        case .spanned:     return "One video spans across all displays."
+-        case .mirrored:    return "All displays mirror the same video (alternates flipped)."
++        case .independent: return String(localized: "Each display plays its own video — set per display below.")
++        case .cloned:      return String(localized: "All displays show the same video.")
++        case .spanned:     return String(localized: "One video spans across all displays.")
++        case .mirrored:    return String(localized: "All displays mirror the same video (alternates flipped).")
+         }
+     }
+ 
+diff --git a/Aerial/UI/VideoBrowser/Dashboard/DashboardOverlayStatusRow.swift b/Aerial/UI/VideoBrowser/Dashboard/DashboardOverlayStatusRow.swift
+index cf7a592..95899b3 100644
+--- a/Aerial/UI/VideoBrowser/Dashboard/DashboardOverlayStatusRow.swift
++++ b/Aerial/UI/VideoBrowser/Dashboard/DashboardOverlayStatusRow.swift
+@@ -23,7 +23,7 @@ struct DashboardOverlayStatusRow: View {
+             Image(systemName: "textformat")
+                 .font(.system(size: 12))
+                 .foregroundColor(.secondary)
+-            Text(label)
++            Text(LocalizedStringKey(label))
+                 .font(.system(size: 13))
+                 .foregroundColor(.secondary)
+ 
+diff --git a/Aerial/UI/VideoBrowser/Dashboard/DashboardRecapStrip.swift b/Aerial/UI/VideoBrowser/Dashboard/DashboardRecapStrip.swift
+index a5f35f4..c2b3c9d 100644
+--- a/Aerial/UI/VideoBrowser/Dashboard/DashboardRecapStrip.swift
++++ b/Aerial/UI/VideoBrowser/Dashboard/DashboardRecapStrip.swift
+@@ -56,10 +56,10 @@ struct DashboardRecapStrip: View {
+                         .font(.system(size: 26))
+                         .foregroundColor(orderColor(for: mode))
+                     VStack(alignment: .leading, spacing: 2) {
+-                        Text(orderTitle(for: mode))
++                        Text(LocalizedStringKey(orderTitle(for: mode)))
+                             .font(.system(size: 17, weight: .semibold))
+                             .foregroundColor(.primary)
+-                        Text(orderSubtitle(for: mode))
++                        Text(LocalizedStringKey(orderSubtitle(for: mode)))
+                             .font(.system(size: 12))
+                             .foregroundColor(.secondary)
+                     }
+@@ -129,7 +129,7 @@ struct RecapCard<MenuContent: View, CardBody: View>: View {
+     var body: some View {
+         VStack(alignment: .leading, spacing: 8) {
+             HStack {
+-                Text(title)
++                Text(LocalizedStringKey(title))
+                     .font(.system(size: 11, weight: .semibold))
+                     .foregroundColor(.secondary)
+                 Spacer()
+@@ -207,18 +207,18 @@ struct TimeRecapCard: View {
+                 let next = nextTimeSlice(slice)
+                 HStack(spacing: 5) {
+                     glyph(timeOfDayIcon(slice))
+-                    Text(slice.capitalized).font(.system(size: 13, weight: .medium))
++                    Text(LocalizedStringKey(slice.capitalized)).font(.system(size: 13, weight: .medium))
+                     Image(systemName: "arrow.right")
+                         .font(.system(size: 10))
+                         .foregroundColor(.secondary)
+                     glyph(timeOfDayIcon(next))
+-                    Text(next.capitalized).font(.system(size: 13, weight: .medium))
++                    Text(LocalizedStringKey(next.capitalized)).font(.system(size: 13, weight: .medium))
+                 }
+                 Text("at \(Self.timeFormatter.string(from: transition))")
+                     .font(.system(size: 12))
+                     .foregroundColor(.secondary)
+             } else {
+-                Text(model.timeModeName())
++                Text(LocalizedStringKey(model.timeModeName()))
+                     .font(.system(size: 12))
+                     .foregroundColor(.secondary)
+             }
+@@ -239,7 +239,7 @@ struct TimeRecapCard: View {
+             Image(systemName: system)
+                 .foregroundColor(color)
+                 .font(.system(size: 15))
+-            Text(text).font(.system(size: 17, weight: .semibold))
++            Text(LocalizedStringKey(text)).font(.system(size: 17, weight: .semibold))
+         }
+     }
+ 
+@@ -263,7 +263,7 @@ struct DisplaysRecapCard: View {
+                 Image(systemName: "display")
+                     .symbolRenderingMode(.multicolor)
+                     .font(.system(size: 18))
+-                Text(stateText).font(.system(size: 17, weight: .semibold))
++                Text(LocalizedStringKey(stateText)).font(.system(size: 17, weight: .semibold))
+             }
+         }
+     }
+@@ -273,10 +273,10 @@ struct DisplaysRecapCard: View {
+     private var stateText: String {
+         let total = NSScreen.screens.count
+         switch PrefsDisplays.displayMode {
+-        case .allDisplays:   return total <= 1 ? "Saver: all screens" : "Saver: all \(total) screens"
+-        case .mainOnly:      return "Saver: main only"
+-        case .secondaryOnly: return "Saver: secondaries"
+-        case .selection:     return "Saver: custom (\(selectedDisplayCount) of \(total))"
++        case .allDisplays:   return total <= 1 ? String(localized: "Saver: all screens") : String(localized: "Saver: all \(total) screens")
++        case .mainOnly:      return String(localized: "Saver: main only")
++        case .secondaryOnly: return String(localized: "Saver: secondaries")
++        case .selection:     return String(localized: "Saver: custom (\(selectedDisplayCount) of \(total))")
+         }
+     }
+ 
+@@ -344,12 +344,12 @@ struct CacheRecapCard: View {
+             HStack(spacing: 12) {
+                 ring
+                 VStack(alignment: .leading, spacing: 4) {
+-                    Text(loaded ? String(format: "%.1f GB", cacheGB) : "Calculating…")
++                    Text(LocalizedStringKey(loaded ? String(format: "%.1f GB", cacheGB) : "Calculating…"))
+                         .font(.system(size: 17, weight: .semibold))
+-                    Text(budgetLine)
++                    Text(LocalizedStringKey(budgetLine))
+                         .font(.system(size: 12))
+                         .foregroundColor(.secondary)
+-                    Label(replacementText, systemImage: "arrow.triangle.2.circlepath")
++                    Label(LocalizedStringKey(replacementText), systemImage: "arrow.triangle.2.circlepath")
+                         .font(.system(size: 12))
+                         .foregroundColor(.secondary)
+                 }
+@@ -378,20 +378,20 @@ struct CacheRecapCard: View {
+     /// Second line: the budget, with the packs figure appended when there
+     /// are any (they sit outside the budget, so never in the headline).
+     private var budgetLine: String {
+-        let budget = unlimited ? "Unlimited" : String(format: "of %.0f GB", limitGB)
++        let budget = unlimited ? String(localized: "Unlimited") : String(format: String(localized: "of %.0f GB"), limitGB)
+         guard packsGB > 0.01 else { return budget }
+-        return budget + String(format: " · packs %.1f GB", packsGB)
++        return budget + String(format: String(localized: " · packs %.1f GB"), packsGB)
+     }
+ 
+     /// Third line: how often cached videos are rotated, per the Cache settings.
+     /// Replacement only runs while auto-download (cache management) is on.
+     private var replacementText: String {
+-        guard managementOn else { return "Auto-download off" }
++        guard managementOn else { return String(localized: "Auto-download off") }
+         switch periodicity {
+-        case .daily:   return "Replaced daily"
+-        case .weekly:  return "Replaced weekly"
+-        case .monthly: return "Replaced monthly"
+-        case .never:   return "Never replaced"
++        case .daily:   return String(localized: "Replaced daily")
++        case .weekly:  return String(localized: "Replaced weekly")
++        case .monthly: return String(localized: "Replaced monthly")
++        case .never:   return String(localized: "Never replaced")
+         }
+     }
+ 
+diff --git a/Aerial/UI/VideoBrowser/Dashboard/DashboardSystemRow.swift b/Aerial/UI/VideoBrowser/Dashboard/DashboardSystemRow.swift
+index ea8b47e..26a30bd 100644
+--- a/Aerial/UI/VideoBrowser/Dashboard/DashboardSystemRow.swift
++++ b/Aerial/UI/VideoBrowser/Dashboard/DashboardSystemRow.swift
+@@ -74,9 +74,9 @@ struct DashboardSystemRow: View {
+                     .font(.system(size: 26))
+                     .foregroundColor(.secondary)
+                 VStack(alignment: .leading, spacing: 6) {
+-                    Text(isScreensaverSet
++                    Text(LocalizedStringKey(isScreensaverSet
+                          ? "Aerial runs as your screensaver via the wallpaper extension."
+-                         : "Aerial isn't set as your screensaver yet.")
++                         : "Aerial isn't set as your screensaver yet."))
+                         .font(.system(size: 12))
+                         .foregroundColor(.secondary)
+                         .fixedSize(horizontal: false, vertical: true)
+diff --git a/Aerial/UI/VideoBrowser/Dashboard/DashboardView.swift b/Aerial/UI/VideoBrowser/Dashboard/DashboardView.swift
+index 28a779f..2097b7e 100644
+--- a/Aerial/UI/VideoBrowser/Dashboard/DashboardView.swift
++++ b/Aerial/UI/VideoBrowser/Dashboard/DashboardView.swift
+@@ -23,7 +23,7 @@ struct DashboardView: View {
+             VStack(alignment: .leading, spacing: 16) {
+                 ContentHeader(
+                     icon: "house",
+-                    title: "Home",
++                    title: String(localized: "Home"),
+                     description: model.modeDescription(model.viewingMode)
+                 ) {
+                     DashboardModeSwitcher(current: model.viewingMode) { newMode in
+diff --git a/Aerial/UI/VideoBrowser/Dashboard/PlaybackSelectorButton.swift b/Aerial/UI/VideoBrowser/Dashboard/PlaybackSelectorButton.swift
+index 8a5d1bf..5e556d5 100644
+--- a/Aerial/UI/VideoBrowser/Dashboard/PlaybackSelectorButton.swift
++++ b/Aerial/UI/VideoBrowser/Dashboard/PlaybackSelectorButton.swift
+@@ -26,7 +26,7 @@ struct PlaybackSelectorButton: View {
+             Text("Plays:")
+                 .font(.system(size: 13))
+                 .foregroundColor(.secondary)
+-            Text(summary)
++            Text(LocalizedStringKey(summary))
+                 .font(.system(size: 13, weight: .medium))
+                 .lineLimit(1)
+ 
+diff --git a/Aerial/UI/VideoBrowser/LiveFeedsContentView.swift b/Aerial/UI/VideoBrowser/LiveFeedsContentView.swift
+index cd4eaaa..a370e7f 100644
+--- a/Aerial/UI/VideoBrowser/LiveFeedsContentView.swift
++++ b/Aerial/UI/VideoBrowser/LiveFeedsContentView.swift
+@@ -61,8 +61,8 @@ struct LiveFeedsContentView: View {
+     private var header: some View {
+         ContentHeader(
+             icon: "dot.radiowaves.left.and.right",
+-            title: "Live Feeds",
+-            description: "Add live streams from local cameras, YouTube, or any HLS URL."
++            title: String(localized: "Live Feeds"),
++            description: String(localized: "Add live streams from local cameras, YouTube, or any HLS URL.")
+         ) {
+             PlayViewButton(state: state)
+             Button {
+diff --git a/Aerial/UI/VideoBrowser/VideoBrowserSidebar.swift b/Aerial/UI/VideoBrowser/VideoBrowserSidebar.swift
+index 2ea2948..3baee3e 100644
+--- a/Aerial/UI/VideoBrowser/VideoBrowserSidebar.swift
++++ b/Aerial/UI/VideoBrowser/VideoBrowserSidebar.swift
+@@ -235,7 +235,7 @@ struct VideoBrowserSidebar: View {
+                     .foregroundColor(highContrastSelected ? .white
+                                      : (isSelected ? .aerial : .secondary))
+                     .frame(width: 20)
+-                Text(title)
++                Text(LocalizedStringKey(title))
+                     .font(.system(size: 14))
+                     .foregroundColor(highContrastSelected ? .white : .primary)
+                 if showNewBadge {
+@@ -287,7 +287,7 @@ struct VideoBrowserSidebar: View {
+                 .font(.system(size: 15))
+                 .foregroundColor(.secondary)
+                 .frame(width: 20)
+-            Text(title)
++            Text(LocalizedStringKey(title))
+                 .font(.system(size: 14))
+         }
+     }
+diff --git a/Aerial/UI/VideoBrowser/VideoGridView.swift b/Aerial/UI/VideoBrowser/VideoGridView.swift
+index bd20932..be0b463 100644
+--- a/Aerial/UI/VideoBrowser/VideoGridView.swift
++++ b/Aerial/UI/VideoBrowser/VideoGridView.swift
+@@ -306,8 +306,8 @@ struct VideoGridView: View {
+     private var myVideosHeader: some View {
+         ContentHeader(
+             icon: "film.stack",
+-            title: "My Videos",
+-            description: "You can add your own videos here, or copy them manually in `/Users/Shared/Aerial/My Videos/`. Files cannot be played from other locations because of security restrictions in macOS."
++            title: String(localized: "My Videos"),
++            description: String(localized: "You can add your own videos here, or copy them manually in `/Users/Shared/Aerial/My Videos/`. Files cannot be played from other locations because of security restrictions in macOS.")
+         ) {
+             PlayViewButton(state: state)
+             downloadAllButtonIfNeeded
+@@ -362,14 +362,14 @@ struct VideoGridView: View {
+     private func categoryHeader() -> AnyView? {
+         let (icon, title): (String, String)
+         switch state.selectedSidebarItem {
+-        case .allVideos: (icon, title) = ("film.stack", "All Videos")
++        case .allVideos: (icon, title) = ("film.stack", String(localized: "All Videos"))
+         case .location(let name): (icon, title) = ("mappin", name)
+         case .scene(let scene): (icon, title) = (sceneIcon(scene), scene.rawValue)
+         case .timeOfDay(let slug): (icon, title) = (timeOfDayIcon(slug), slug.capitalized)
+-        case .downloaded: (icon, title) = ("arrow.down.circle", "Downloaded")
+-        case .notDownloaded: (icon, title) = ("cloud", "Not Downloaded")
+-        case .favorites: (icon, title) = ("star", "Favorites")
+-        case .hidden: (icon, title) = ("eye.slash", "Hidden")
++        case .downloaded: (icon, title) = ("arrow.down.circle", String(localized: "Downloaded"))
++        case .notDownloaded: (icon, title) = ("cloud", String(localized: "Not Downloaded"))
++        case .favorites: (icon, title) = ("star", String(localized: "Favorites"))
++        case .hidden: (icon, title) = ("eye.slash", String(localized: "Hidden"))
+         default: return nil
+         }
+ 
+diff --git a/Config/Version.xcconfig b/Config/Version.xcconfig
+index 7adbae3..2add81c 100644
+--- a/Config/Version.xcconfig
++++ b/Config/Version.xcconfig
+@@ -1,4 +1,4 @@
+ // Version configuration for Aerial Companion and Screensaver
+ // Run `/Scripts/bump-version.sh 1.2.3beta4` to update version everywhere
+ 
+-MARKETING_VERSION = 4.1.6
++MARKETING_VERSION = 4.1.7
+diff --git a/Shared/Settings/PrefsDisplays.swift b/Shared/Settings/PrefsDisplays.swift
+index 3a0c283..de518e4 100644
+--- a/Shared/Settings/PrefsDisplays.swift
++++ b/Shared/Settings/PrefsDisplays.swift
+@@ -23,10 +23,10 @@ enum ViewingMode: Int {
+     /// embed the mode name into a sentence ("In spanned mode...").
+     var displayName: String {
+         switch self {
+-        case .independent: return "independent"
+-        case .cloned:      return "cloned"
+-        case .spanned:     return "spanned"
+-        case .mirrored:    return "mirrored"
++        case .independent: return String(localized: "independent")
++        case .cloned:      return String(localized: "cloned")
++        case .spanned:     return String(localized: "spanned")
++        case .mirrored:    return String(localized: "mirrored")
+         }
+     }
+ }

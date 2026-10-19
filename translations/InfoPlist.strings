@@ -1,0 +1,3 @@
+"NSLocationUsageDescription" = "Aerial 使用你的位置读取当前 Wi-Fi 网络名称（用于标记可下载的可信 Wi-Fi）、显示本地天气，并计算日出和日落时间。";
+"NSAppleEventsUsageDescription" = "Aerial 需要与“音乐”通信以显示正在播放的信息。";
+"NSAppDataUsageDescription" = "Aerial 需要访问 macOS 屏幕保护程序以安装和更新 Aerial。";

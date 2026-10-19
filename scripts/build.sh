@@ -33,7 +33,10 @@ if ! grep -q "LocalizedStringKey(panel.title)" "$SRC/Aerial/UI/Settings/Settings
     exit 1
 fi
 
-IDENTITY="$(security find-identity -v -p codesigning 2>/dev/null | awk -F'"' '/Apple Development/ {print $2; exit}')"
+IDENTITY="${SIGN_IDENTITY:-}"
+if [ -z "$IDENTITY" ]; then
+    IDENTITY="$(security find-identity -v -p codesigning 2>/dev/null | awk -F'"' '/Apple Development/ {print $2; exit}')"
+fi
 if [ -z "$IDENTITY" ]; then
     echo "警告：没有找到 Apple Development 证书，将使用本机临时签名。"
     echo "墙纸扩展可能无法加载；建议在 Xcode 中登录 Apple ID 后重试。"
@@ -48,6 +51,7 @@ echo "== 构建 Release（不签名） =="
 xcodebuild -project "$SRC/Aerial.xcodeproj" -scheme Aerial \
     -configuration Release -destination 'platform=macOS' \
     -derivedDataPath "$BUILD/DerivedData" \
+    ARCHS="arm64 x86_64" ONLY_ACTIVE_ARCH=NO \
     CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" \
     build
 
@@ -66,6 +70,12 @@ if [ -d "$EXT" ]; then
     cp "$ROOT/translations/Localizable.strings" "$EXT/Contents/Resources/zh-Hans.lproj/Localizable.strings"
     cp "$ROOT/translations/InfoPlist-extension.strings" "$EXT/Contents/Resources/zh-Hans.lproj/InfoPlist.strings"
 fi
+
+echo "== 关闭自动更新默认值 =="
+/usr/libexec/PlistBuddy -c "Delete :SUEnableAutomaticChecks" "$APP/Contents/Info.plist" >/dev/null 2>&1 || true
+/usr/libexec/PlistBuddy -c "Add :SUEnableAutomaticChecks bool false" "$APP/Contents/Info.plist"
+/usr/libexec/PlistBuddy -c "Delete :SUAutomaticallyUpdate" "$APP/Contents/Info.plist" >/dev/null 2>&1 || true
+/usr/libexec/PlistBuddy -c "Add :SUAutomaticallyUpdate bool false" "$APP/Contents/Info.plist"
 
 echo "== 签名 =="
 if [ -d "$APP/Contents/Frameworks/Sparkle.framework" ]; then

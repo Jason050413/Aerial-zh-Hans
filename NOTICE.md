@@ -2,7 +2,8 @@
 
 ## 上游项目
 
-- 项目：Aerial（AerialScreensaver/Aerial）
+- 项目：Aerial（[AerialScreensaver/Aerial](https://github.com/AerialScreensaver/Aerial)）
+- 官网：[aerialscreensaver.github.io](https://aerialscreensaver.github.io/)
 - 目标版本：`v4.1.7`
 - 版权：Copyright (c) 2015–present Guillaume Louel, and contributors
 - 许可证：MIT

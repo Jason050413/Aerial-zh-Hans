@@ -2,6 +2,16 @@
 
 给 Aerial 4.1.7 的社区简体中文补丁。覆盖设置、视频库、首页仪表盘、首次启动向导和常见弹窗，共 840 条翻译。
 
+上游项目：[Aerial](https://github.com/AerialScreensaver/Aerial)（MIT），官网：[aerialscreensaver.github.io](https://aerialscreensaver.github.io/)。本项目基于 `v4.1.7`。
+
+## 下载
+
+到 [Releases](https://github.com/Jason050413/Aerial-zh-Hans/releases) 下载最新的 `Aerial-4.1.7-zh-Hans-v0.1.0.zip`。
+
+解压后右键 `安装.command` → 打开。安装脚本会备份旧版、复制到 `/Applications`、清除隔离并启动。首次运行如果系统拦截，右键 `/Applications/Aerial.app` → 打开。
+
+要求 macOS 26+，支持 Apple Silicon 和 Intel。
+
 ## 构建
 
 要求：macOS 26+、Xcode 16+、Apple Development 证书。

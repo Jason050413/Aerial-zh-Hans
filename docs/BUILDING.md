@@ -20,8 +20,9 @@ bash scripts/build.sh --install
 1. `xcodebuild -resolvePackageDependencies` 拉取 Sparkle、PaperSaver、KeyboardShortcuts、swift-argument-parser。
 2. 用 `CODE_SIGNING_ALLOWED=NO` 构建 Release。
 3. 把 `translations/` 复制到 App 和壁纸扩展的 `zh-Hans.lproj`。
-4. 用本机 Apple Development 证书签名 Sparkle、扩展和主 App。
-5. 验证签名。
+4. 关闭自动更新默认值，避免官方更新覆盖汉化。
+5. 用本机 Apple Development 证书签名 Sparkle、扩展和主 App。
+6. 验证签名。
 
 `--install` 会先备份当前 `/Applications/Aerial.app` 到 `backup/`，再替换并重启墙纸代理。
 

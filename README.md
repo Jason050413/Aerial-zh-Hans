@@ -6,11 +6,13 @@
 
 ## 下载
 
-到 [Releases](https://github.com/Jason050413/Aerial-zh-Hans/releases) 下载最新的 `Aerial-4.1.7-zh-Hans-v0.1.0.zip`。
+先安装官方 [Aerial 4.1.7](https://github.com/AerialScreensaver/Aerial/releases/tag/v4.1.7)。
 
-解压后右键 `安装.command` → 打开。安装脚本会备份旧版、复制到 `/Applications`、清除隔离并启动。首次运行如果系统拦截，右键 `/Applications/Aerial.app` → 打开。
+到 [Releases](https://github.com/Jason050413/Aerial-zh-Hans/releases) 下载最新的 `Aerial-4.1.7-zh-Hans-v0.1.0-patch.zip`。
 
-要求 macOS 26+，支持 Apple Silicon 和 Intel。
+解压后右键 `Install.command` → 打开。脚本会备份旧版、替换程序文件和翻译、重新签名并启动。首次运行如果系统拦截，右键 `/Applications/Aerial.app` → 打开。
+
+要求 macOS 26+，支持 Apple Silicon 和 Intel，只适用于 Aerial 4.1.7。
 
 ## 构建
 
